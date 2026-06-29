@@ -1,0 +1,126 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 1. Global Safety Net Catch-All
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Standard Auth and Identity Helpers
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Validation Blueprint Helpers
+    function isValidTask(data) {
+      return data.userId == request.auth.uid
+        && data.title is string && data.title.size() > 0 && data.title.size() <= 200
+        && (data.priority == 'low' || data.priority == 'medium' || data.priority == 'high' || data.priority == 'urgent')
+        && data.category is string && data.category.size() <= 100
+        && data.estimatedTime is number
+        && (data.recurring == 'none' || data.recurring == 'daily' || data.recurring == 'weekly' || data.recurring == 'monthly')
+        && data.isCompleted is bool;
+    }
+
+    function isValidGoal(data) {
+      return data.userId == request.auth.uid
+        && data.title is string && data.title.size() > 0 && data.title.size() <= 200
+        && data.progress is number && data.progress >= 0 && data.progress <= 100;
+    }
+
+    function isValidHabit(data) {
+      return data.userId == request.auth.uid
+        && data.title is string && data.title.size() > 0 && data.title.size() <= 200
+        && (data.frequency == 'daily' || data.frequency == 'weekly' || data.frequency == 'monthly')
+        && data.streak is number;
+    }
+
+    function isValidFocusSession(data) {
+      return data.userId == request.auth.uid
+        && data.startTime is string
+        && data.durationSeconds is number
+        && data.completed is bool;
+    }
+
+    function isValidNotification(data) {
+      return data.userId == request.auth.uid
+        && data.title is string && data.title.size() > 0
+        && data.message is string && data.message.size() > 0
+        && data.isRead is bool;
+    }
+
+    function isValidSettings(data) {
+      return data.userId == request.auth.uid
+        && data.dailyWorkHours is number
+        && data.pomodoroWorkMinutes is number
+        && data.pomodoroBreakMinutes is number
+        && data.soundEnabled is bool
+        && (data.coachingFrequency == 'daily' || data.coachingFrequency == 'weekly' || data.coachingFrequency == 'none')
+        && data.darkMode is bool;
+    }
+
+    // Database Collection Mappings
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    match /tasks/{taskId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidTask(incoming());
+      allow update: if isSignedIn() && isValidTask(incoming()) && existing().userId == request.auth.uid;
+      allow delete: if isSignedIn() && existing().userId == request.auth.uid;
+    }
+
+    match /goals/{goalId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidGoal(incoming());
+      allow update: if isSignedIn() && isValidGoal(incoming()) && existing().userId == request.auth.uid;
+      allow delete: if isSignedIn() && existing().userId == request.auth.uid;
+    }
+
+    match /habits/{habitId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidHabit(incoming());
+      allow update: if isSignedIn() && isValidHabit(incoming()) && existing().userId == request.auth.uid;
+      allow delete: if isSignedIn() && existing().userId == request.auth.uid;
+    }
+
+    match /sessions/{sessionId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidFocusSession(incoming());
+      allow update: if isSignedIn() && isValidFocusSession(incoming()) && existing().userId == request.auth.uid;
+      allow delete: if isSignedIn() && existing().userId == request.auth.uid;
+    }
+
+    match /notifications/{notificationId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidNotification(incoming());
+      allow update: if isSignedIn() && isValidNotification(incoming()) && existing().userId == request.auth.uid;
+      allow delete: if isSignedIn() && existing().userId == request.auth.uid;
+    }
+
+    match /settings/{settingsId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidSettings(incoming());
+      allow update: if isSignedIn() && isValidSettings(incoming()) && existing().userId == request.auth.uid;
+      allow delete: if isSignedIn() && existing().userId == request.auth.uid;
+    }
+
+    match /analytics/{analyticsId} {
+      allow read, write: if isSignedIn() && (resource == null || resource.data.userId == request.auth.uid || request.resource.data.userId == request.auth.uid);
+    }
+  }
+}

@@ -1,0 +1,132 @@
+{
+  "entities": {
+    "Task": {
+      "title": "Task",
+      "description": "A user's task or to-do item",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "notes": { "type": "string" },
+        "priority": { "type": "string", "enum": ["low", "medium", "high", "urgent"] },
+        "category": { "type": "string" },
+        "estimatedTime": { "type": "number" },
+        "deadline": { "type": "string" },
+        "recurring": { "type": "string", "enum": ["none", "daily", "weekly", "monthly"] },
+        "isCompleted": { "type": "boolean" },
+        "userId": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "riskLevel": { "type": "string", "enum": ["Low", "Medium", "High", "Critical"] },
+        "riskScore": { "type": "number" },
+        "riskExplanation": { "type": "string" },
+        "recoveryPlan": { "type": "string" },
+        "suggestedOrder": { "type": "number" }
+      },
+      "required": ["title", "priority", "category", "estimatedTime", "recurring", "isCompleted", "userId", "createdAt"]
+    },
+    "Goal": {
+      "title": "Goal",
+      "description": "A long-term target goal with milestones",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "progress": { "type": "number" },
+        "targetDate": { "type": "string" },
+        "userId": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["title", "progress", "userId", "createdAt"]
+    },
+    "Habit": {
+      "title": "Habit",
+      "description": "A recurring behavior tracker",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "frequency": { "type": "string", "enum": ["daily", "weekly", "monthly"] },
+        "streak": { "type": "number" },
+        "lastCompleted": { "type": "string" },
+        "userId": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["title", "frequency", "streak", "userId", "createdAt"]
+    },
+    "FocusSession": {
+      "title": "FocusSession",
+      "description": "A recorded Pomodoro focus session block",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "taskId": { "type": "string" },
+        "taskTitle": { "type": "string" },
+        "startTime": { "type": "string" },
+        "durationSeconds": { "type": "number" },
+        "completed": { "type": "boolean" },
+        "userId": { "type": "string" },
+        "rating": { "type": "number" },
+        "notes": { "type": "string" }
+      },
+      "required": ["startTime", "durationSeconds", "completed", "userId"]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "An alert, reminder, or co-pilot milestone badge",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "type": { "type": "string", "enum": ["deadline", "coach", "achievement", "reminder"] },
+        "isRead": { "type": "boolean" },
+        "timestamp": { "type": "string" }
+      },
+      "required": ["userId", "title", "message", "type", "isRead", "timestamp"]
+    },
+    "UserSettings": {
+      "title": "UserSettings",
+      "description": "Configured user parameters and Pomodoro limits",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "dailyWorkHours": { "type": "number" },
+        "pomodoroWorkMinutes": { "type": "number" },
+        "pomodoroBreakMinutes": { "type": "number" },
+        "soundEnabled": { "type": "boolean" },
+        "coachingFrequency": { "type": "string", "enum": ["daily", "weekly", "none"] },
+        "darkMode": { "type": "boolean" }
+      },
+      "required": ["userId", "dailyWorkHours", "pomodoroWorkMinutes", "pomodoroBreakMinutes", "soundEnabled", "coachingFrequency", "darkMode"]
+    }
+  },
+  "firestore": {
+    "/tasks/{taskId}": {
+      "schema": "Task",
+      "description": "Tasks created by users"
+    },
+    "/goals/{goalId}": {
+      "schema": "Goal",
+      "description": "Goals established by users"
+    },
+    "/habits/{habitId}": {
+      "schema": "Habit",
+      "description": "Habit streaks logged by users"
+    },
+    "/sessions/{sessionId}": {
+      "schema": "FocusSession",
+      "description": "Pomodoro sessions recorded by users"
+    },
+    "/notifications/{notificationId}": {
+      "schema": "Notification",
+      "description": "System-generated alerts and achievements"
+    },
+    "/settings/{settingsId}": {
+      "schema": "UserSettings",
+      "description": "Settings for each user"
+    }
+  }
+}

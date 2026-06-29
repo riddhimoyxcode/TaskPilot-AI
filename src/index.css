@@ -1,0 +1,90 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import "tailwindcss";
+
+@variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+.grid-bg-light {
+  background-color: #f8fafc;
+  background-image: 
+    linear-gradient(to right, rgba(37, 99, 235, 0.015) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(37, 99, 235, 0.015) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.grid-bg-dark {
+  background-color: #090a0f;
+  background-image: 
+    linear-gradient(to right, rgba(99, 102, 241, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(99, 102, 241, 0.03) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Custom modern scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #1e293b;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #2563eb;
+}
+
+/* Native date input custom styling for seamless iframe and dark mode support */
+input[type="date"] {
+  position: relative;
+  min-height: 38px;
+  padding-right: 40px !important; /* Make room for the indicator icon */
+}
+
+/* Style the native calendar picker indicator to be easily clickable and visible */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  padding: 0;
+  cursor: pointer;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  opacity: 0.7;
+  transition: opacity 0.15s ease-in-out, transform 0.15s ease-in-out;
+  pointer-events: auto;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+  transform: translateY(-50%) scale(1.05);
+}
+
+/* Light mode calendar icon filter (slate grey/blue tint) */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.4) sepia(0.2) saturate(2) hue-rotate(180deg);
+}
+
+/* Dark mode calendar icon filter (bright white/light grey) */
+.dark input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1) brightness(0.95);
+}
+
