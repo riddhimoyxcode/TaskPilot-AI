@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Settings, Volume2, VolumeX, Clock, Monitor, Save, Sparkles, HelpCircle, FileText, Sun, Moon } from "lucide-react";
+import { Settings, Volume2, VolumeX, Clock, Monitor, Save, Sun, Moon } from "lucide-react";
 import { UserSettings } from "../types";
 
 interface SettingsViewProps {
@@ -62,10 +62,10 @@ export default function SettingsView({ settings, onUpdateSettings }: SettingsVie
         <p className="text-xs text-slate-500 dark:text-slate-400">Configure Pomodoro pacing limits, notification chimes, and coaching intervals.</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="max-w-4xl">
         
         {/* Settings Form */}
-        <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-none space-y-6 text-slate-800 dark:text-white transition-all">
+        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-none space-y-6 text-slate-800 dark:text-white transition-all">
           <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
             <Settings className="w-5 h-5 text-blue-600 dark:text-blue-400 animate-pulse" />
             <h3 className="font-bold text-sm text-slate-900 dark:text-white">Engine Configuration</h3>
@@ -199,35 +199,6 @@ export default function SettingsView({ settings, onUpdateSettings }: SettingsVie
             >
               <Save className="w-4 h-4 text-white" /> Save Preferences
             </button>
-          </div>
-        </div>
-
-        {/* Informational Panel */}
-        <div className="space-y-4">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-none space-y-4 text-slate-800 dark:text-white transition-all">
-            <h3 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-amber-500" /> Configurations
-            </h3>
-
-            <div className="space-y-4 text-xs leading-relaxed">
-              <p className="text-slate-500 dark:text-slate-400 font-sans">TaskPilot AI connects server-side to the Gemini models dynamically. Ensure the following environment variables are defined in settings:</p>
-              
-              <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 space-y-3 font-mono text-[10px] text-slate-700 dark:text-slate-300">
-                <div>
-                  <span className="text-blue-600 dark:text-blue-400 font-bold block uppercase tracking-wide">GEMINI_API_KEY</span>
-                  <span className="text-slate-500 dark:text-slate-400 font-sans">Provides text parsing and priorities optimization.</span>
-                </div>
-                <div>
-                  <span className="text-blue-600 dark:text-blue-400 font-bold block uppercase tracking-wide">APP_URL</span>
-                  <span className="text-slate-500 dark:text-slate-400 font-sans">Enables OAuth references in Cloud Run environments.</span>
-                </div>
-              </div>
-
-              <div className="p-4 bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-500/20 rounded-2xl flex gap-2">
-                <HelpCircle className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
-                <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-normal font-sans">For persistent databases, TaskPilot syncs to Firebase Firestore using the bootstrap client config file.</p>
-              </div>
-            </div>
           </div>
         </div>
       </div>

@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { Search, Bell, Sparkles, User, ShieldAlert, CheckCircle2 } from "lucide-react";
-import { Notification } from "../types";
+import { useState, useEffect, useRef } from "react";
+import { Search, Bell, Sparkles, User, ShieldAlert, CheckCircle2, CheckSquare, Target, Flame, Clock } from "lucide-react";
+import { Notification, Task, Goal, Habit, FocusSession } from "../types";
 
 interface TopBarProps {
   notifications: Notification[];
@@ -10,6 +10,10 @@ interface TopBarProps {
   isAnonymous: boolean;
   onOpenAssistant: () => void;
   onMarkNotificationsRead?: () => void;
+  tasks?: Task[];
+  goals?: Goal[];
+  habits?: Habit[];
+  sessions?: FocusSession[];
 }
 
 export default function TopBar({
@@ -19,25 +23,236 @@ export default function TopBar({
   userDisplayName,
   isAnonymous,
   onOpenAssistant,
-  onMarkNotificationsRead
+  onMarkNotificationsRead,
+  tasks = [],
+  goals = [],
+  habits = [],
+  sessions = []
 }: TopBarProps) {
   const [showNotifications, setShowNotifications] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
   const unreadCount = notifications.filter((n) => !n.isRead).length;
+
+  // Keydown listener for global hotkey to focus (⌘K or Ctrl+K)
+  useEffect(() => {
+    const handleKeyDownGlobal = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        inputRef.current?.focus();
+        setIsDropdownOpen(true);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDownGlobal);
+    return () => window.removeEventListener("keydown", handleKeyDownGlobal);
+  }, []);
+
+  // Click outside listener to collapse search dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const cleanQuery = searchQuery.trim().toLowerCase();
+
+  const filteredTasks = cleanQuery
+    ? tasks.filter(t => 
+        t.title.toLowerCase().includes(cleanQuery) || 
+        (t.notes && t.notes.toLowerCase().includes(cleanQuery)) ||
+        t.category.toLowerCase().includes(cleanQuery)
+      )
+    : [];
+
+  const filteredGoals = cleanQuery
+    ? goals.filter(g => 
+        g.title.toLowerCase().includes(cleanQuery) || 
+        (g.description && g.description.toLowerCase().includes(cleanQuery))
+      )
+    : [];
+
+  const filteredHabits = cleanQuery
+    ? habits.filter(h => 
+        h.title.toLowerCase().includes(cleanQuery)
+      )
+    : [];
+
+  const filteredSessions = cleanQuery
+    ? sessions.filter(s => 
+        (s.taskTitle && s.taskTitle.toLowerCase().includes(cleanQuery)) || 
+        (s.notes && s.notes.toLowerCase().includes(cleanQuery))
+      )
+    : [];
+
+  const totalResultsCount = filteredTasks.length + filteredGoals.length + filteredHabits.length + filteredSessions.length;
+  const hasResults = totalResultsCount > 0;
+
+  const handleSelectResult = (tabId: string) => {
+    setActiveTab(tabId);
+    setSearchQuery("");
+    setIsDropdownOpen(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      if (filteredTasks.length > 0) {
+        handleSelectResult("tasks");
+      } else if (filteredGoals.length > 0) {
+        handleSelectResult("goals");
+      } else if (filteredHabits.length > 0) {
+        handleSelectResult("dashboard");
+      } else if (filteredSessions.length > 0) {
+        handleSelectResult("dashboard");
+      }
+    }
+  };
 
   return (
     <header className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900/60 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-3xl p-4 shadow-sm dark:shadow-none transition-colors duration-300">
       
-      {/* Mock Search input */}
-      <div className="relative flex-1 max-w-md w-full">
+      {/* Search Input Container */}
+      <div ref={containerRef} className="relative flex-1 max-w-md w-full">
         <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
         <input
+          ref={inputRef}
           type="text"
+          value={searchQuery}
+          onChange={(e) => {
+            setSearchQuery(e.target.value);
+            setIsDropdownOpen(true);
+          }}
+          onFocus={() => setIsDropdownOpen(true)}
+          onKeyDown={handleKeyDown}
           placeholder="Search tasks, goals, habits, or AI suggestions... (⌘K)"
-          className="w-full pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-xl focus:outline-none focus:border-blue-500 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-600"
+          className="w-full pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-xl focus:outline-none focus:border-blue-500 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-600 font-medium"
         />
         <div className="absolute right-3 top-1/2 -translate-y-1/2 hidden md:flex items-center gap-1 px-1.5 py-0.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[9px] text-slate-400 dark:text-slate-500 rounded-md font-mono">
           ⌘K
         </div>
+
+        {/* Floating Search Dropdown */}
+        {isDropdownOpen && searchQuery.trim() !== "" && (
+          <div className="absolute left-0 right-0 mt-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl z-50 p-4 max-h-96 overflow-y-auto space-y-4 text-slate-800 dark:text-white transition-all animate-in fade-in zoom-in-95 duration-150">
+            
+            {!hasResults && (
+              <p className="text-center text-xs text-slate-400 py-6">No results found for "{searchQuery}"</p>
+            )}
+
+            {hasResults && (
+              <div className="space-y-4">
+                
+                {/* Tasks Section */}
+                {filteredTasks.length > 0 && (
+                  <div>
+                    <div className="flex items-center gap-1.5 px-1 pb-1 mb-1.5 border-b border-slate-100 dark:border-slate-800">
+                      <CheckSquare className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tasks</span>
+                    </div>
+                    <div className="space-y-1">
+                      {filteredTasks.map(task => (
+                        <button
+                          key={task.id}
+                          onClick={() => handleSelectResult("tasks")}
+                          className="w-full text-left px-2 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-lg transition-all border-none bg-transparent cursor-pointer flex justify-between items-center"
+                        >
+                          <div className="min-w-0 flex-1 pr-2">
+                            <span className="font-semibold text-xs text-slate-700 dark:text-slate-200 block truncate">{task.title}</span>
+                            {task.notes && <span className="text-[10px] text-slate-400 dark:text-slate-500 block truncate">{task.notes}</span>}
+                          </div>
+                          <span className={`text-[8px] font-bold uppercase px-1.5 py-0.5 rounded-full shrink-0 ${
+                            task.priority === 'urgent' ? 'bg-rose-500/10 text-rose-500' :
+                            task.priority === 'high' ? 'bg-amber-500/10 text-amber-500' :
+                            'bg-slate-100 dark:bg-slate-800 text-slate-400'
+                          }`}>{task.priority}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Goals Section */}
+                {filteredGoals.length > 0 && (
+                  <div>
+                    <div className="flex items-center gap-1.5 px-1 pb-1 mb-1.5 border-b border-slate-100 dark:border-slate-800">
+                      <Target className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Goals</span>
+                    </div>
+                    <div className="space-y-1">
+                      {filteredGoals.map(goal => (
+                        <button
+                          key={goal.id}
+                          onClick={() => handleSelectResult("goals")}
+                          className="w-full text-left px-2 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-lg transition-all border-none bg-transparent cursor-pointer flex justify-between items-center"
+                        >
+                          <div className="min-w-0 flex-1 pr-2">
+                            <span className="font-semibold text-xs text-slate-700 dark:text-slate-200 block truncate">{goal.title}</span>
+                            {goal.description && <span className="text-[10px] text-slate-400 dark:text-slate-500 block truncate">{goal.description}</span>}
+                          </div>
+                          <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-full shrink-0">{goal.progress}%</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Habits Section */}
+                {filteredHabits.length > 0 && (
+                  <div>
+                    <div className="flex items-center gap-1.5 px-1 pb-1 mb-1.5 border-b border-slate-100 dark:border-slate-800">
+                      <Flame className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Habits</span>
+                    </div>
+                    <div className="space-y-1">
+                      {filteredHabits.map(habit => (
+                        <button
+                          key={habit.id}
+                          onClick={() => handleSelectResult("dashboard")}
+                          className="w-full text-left px-2 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-lg transition-all border-none bg-transparent cursor-pointer flex justify-between items-center"
+                        >
+                          <span className="font-semibold text-xs text-slate-700 dark:text-slate-200 truncate flex-1 pr-2">{habit.title}</span>
+                          <span className="text-[9px] font-bold text-amber-500 dark:text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded-full shrink-0">{habit.streak}d streak</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Focus Sessions Section */}
+                {filteredSessions.length > 0 && (
+                  <div>
+                    <div className="flex items-center gap-1.5 px-1 pb-1 mb-1.5 border-b border-slate-100 dark:border-slate-800">
+                      <Clock className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Focus Logs</span>
+                    </div>
+                    <div className="space-y-1">
+                      {filteredSessions.map(session => (
+                        <button
+                          key={session.id}
+                          onClick={() => handleSelectResult("dashboard")}
+                          className="w-full text-left px-2 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-lg transition-all border-none bg-transparent cursor-pointer flex justify-between items-center"
+                        >
+                          <div className="min-w-0 flex-1 pr-2">
+                            <span className="font-semibold text-xs text-slate-700 dark:text-slate-200 block truncate">{session.taskTitle || "General Focus Block"}</span>
+                            {session.notes && <span className="text-[10px] text-slate-400 dark:text-slate-500 block truncate">{session.notes}</span>}
+                          </div>
+                          <span className="text-[9px] font-bold text-purple-600 dark:text-purple-400 bg-purple-500/10 px-1.5 py-0.5 rounded-full shrink-0">{Math.round(session.durationSeconds / 60)}m</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Action Utilities */}

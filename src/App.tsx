@@ -453,7 +453,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#090a0f] text-slate-800 dark:text-slate-100 antialiased font-sans flex flex-col md:flex-row transition-colors duration-300 pb-16 md:pb-0 grid-bg-light dark:grid-bg-dark">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#090a0f] text-slate-800 dark:text-slate-100 antialiased font-sans flex flex-col md:flex-row transition-colors duration-300 pb-16 md:pb-0 grid-bg-light">
       
       {/* Dynamic Error alert popup */}
       {generalError && (
@@ -482,10 +482,14 @@ export default function App() {
           notifications={notifications}
           activeTab={activeTab}
           setActiveTab={setActiveTab}
-          userDisplayName={currentUser.displayName}
-          isAnonymous={currentUser.isAnonymous}
+          userDisplayName={currentUser?.displayName || null}
+          isAnonymous={currentUser?.isAnonymous ?? false}
           onMarkNotificationsRead={handleMarkNotificationsRead}
           onOpenAssistant={() => setIsAssistantOpen(true)}
+          tasks={tasks}
+          goals={goals}
+          habits={habits}
+          sessions={sessions}
         />
 
         {renderView()}
